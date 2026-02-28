@@ -14,17 +14,85 @@ DB_PATH = "cinema_storage.db"
 # =======================
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def home():
     return """
     <html>
-        <head>
-            <title>Кинохранилище</title>
-        </head>
-        <body style="font-family: Arial; padding:40px;">
-            <h1>🎬 Кинохранилище API</h1>
-            <p>Проект успешно запущен на Render</p>
-            <a href="/docs">Перейти к документации API</a>
-        </body>
+    <head>
+        <title>Кинохранилище</title>
+        <style>
+            body { font-family: Arial; padding: 40px; background:#f4f4f4; }
+            h1 { color:#333; }
+            button { 
+                padding:10px 15px; 
+                margin:5px; 
+                cursor:pointer;
+                border:none;
+                background:#333;
+                color:white;
+                border-radius:5px;
+            }
+            input {
+                padding:8px;
+                margin:5px;
+            }
+            pre {
+                background:white;
+                padding:15px;
+                border-radius:5px;
+                overflow:auto;
+            }
+        </style>
+    </head>
+    <body>
+
+        <h1>🎬 Кинохранилище</h1>
+
+        <button onclick="getGenres()">Найти все жанры</button>
+        <button onclick="getCassettes()">Найти все кассеты</button>
+
+        <br><br>
+
+        <input type="text" id="genreInput" placeholder="Введите ID жанра">
+        <button onclick="getByGenre()">Найти кассеты по жанру</button>
+
+        <h3>Результат:</h3>
+        <pre id="result">Здесь появится JSON...</pre>
+
+        <br>
+        <a href="/docs">Перейти к документации API</a>
+
+        <script>
+            async function getGenres() {
+                const response = await fetch('/genres');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            }
+
+            async function getCassettes() {
+                const response = await fetch('/cassettes');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            }
+
+            async function getByGenre() {
+                const genreId = document.getElementById('genreInput').value;
+
+                if (!genreId) {
+                    alert("Введите ID жанра");
+                    return;
+                }
+
+                const response = await fetch('/cassettes');
+                const data = await response.json();
+
+                const filtered = data.cassettes.filter(c => c.genre_id == genreId);
+
+                document.getElementById('result').textContent = JSON.stringify(filtered, null, 2);
+            }
+        </script>
+
+    </body>
     </html>
     """
 
