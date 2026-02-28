@@ -370,7 +370,6 @@ def seed_data(cursor):
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, cassette)
 
-
-if __name__ == "__main__":
+@app.on_event("startup")
+def startup():
     init_db()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
