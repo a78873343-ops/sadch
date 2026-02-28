@@ -1,6 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import sqlite3
 from typing import Optional
@@ -8,16 +7,14 @@ import datetime
 
 app = FastAPI(title="Кинохранилище")
 
-templates = Jinja2Templates(directory="templates")
-
 DB_PATH = "cinema_storage.db"
 
-# =======================
+# =========================
 # ГЛАВНАЯ СТРАНИЦА (САЙТ)
-# =======================
+# =========================
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
+def home():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -31,14 +28,73 @@ def home(request: Request):
 
         cassettes = cursor.fetchall()
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "cassettes": cassettes
-    })
+    rows = ""
+    for cassette in cassettes:
+        rows += f"""
+        <tr>
+            <td>{cassette['title']}</td>
+            <td>{cassette['year']}</td>
+            <td>{cassette['status']}</td>
+        </tr>
+        """
 
-# =======================
-# API МОДЕЛИ
-# =======================
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Кинохранилище</title>
+        <style>
+            body {{
+                font-family: Arial;
+                background: #f4f4f4;
+                padding: 40px;
+            }}
+            h1 {{
+                color: #333;
+            }}
+            table {{
+                border-collapse: collapse;
+                width: 100%;
+                background: white;
+            }}
+            th, td {{
+                padding: 10px;
+                border: 1px solid #ddd;
+            }}
+            th {{
+                background: #222;
+                color: white;
+            }}
+            a {{
+                display: inline-block;
+                margin-top: 20px;
+            }}
+        </style>
+    </head>
+    <body>
+
+        <h1>🎬 Кинохранилище</h1>
+
+        <table>
+            <tr>
+                <th>Название</th>
+                <th>Год</th>
+                <th>Статус</th>
+            </tr>
+            {rows}
+        </table>
+
+        <a href="/docs">Перейти к API документации</a>
+
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)
+
+# =========================
+# API МОДЕЛЬ
+# =========================
 
 class CassetteCreate(BaseModel):
     cabinet_id: int
@@ -49,9 +105,9 @@ class CassetteCreate(BaseModel):
     year: int
     status_id: int
 
-# =======================
-# API: ДОБАВЛЕНИЕ КАССЕТЫ
-# =======================
+# =========================
+# API ДОБАВЛЕНИЯ
+# =========================
 
 @app.post("/cassettes")
 def create_cassette(cassette: CassetteCreate):
@@ -61,6 +117,7 @@ def create_cassette(cassette: CassetteCreate):
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
+
         cursor.execute("""
             INSERT INTO cassettes
             (cabinet_id, shelf_id, genre_id, title, director, year, status_id)
@@ -74,13 +131,14 @@ def create_cassette(cassette: CassetteCreate):
             cassette.year,
             cassette.status_id
         ))
+
         conn.commit()
 
     return {"message": "Кассета добавлена"}
 
-# =======================
+# =========================
 # INIT DB
-# =======================
+# =========================
 
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
@@ -118,7 +176,7 @@ def init_db():
             cursor.execute("""
                 INSERT INTO cassettes 
                 (cabinet_id, shelf_id, genre_id, title, director, year, status_id)
-                VALUES (1,1,1,'Интерстеллар','Нолан',2014,1)
+                VALUES (1,1,1,'Интерстеллар','Кристофер Нолан',2014,1)
             """)
 
         conn.commit()
