@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+cinema_storage.db
