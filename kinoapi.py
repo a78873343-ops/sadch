@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 import sqlite3
 from typing import Optional
 import datetime
